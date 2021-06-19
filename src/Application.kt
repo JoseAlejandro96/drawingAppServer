@@ -2,6 +2,7 @@ package com.joshportfolio
 
 import com.joshportfolio.routes.createRoomRoute
 import com.joshportfolio.routes.getRoomsRoute
+import com.joshportfolio.routes.joinRoomRoute
 import com.joshportfolio.session.DrawingSession
 import io.ktor.application.*
 import io.ktor.response.*
@@ -44,7 +45,9 @@ fun Application.module(testing: Boolean = false) {
     install(WebSockets)
     install(Routing){
         createRoomRoute()
-        getRoomsRoute()    }
+        getRoomsRoute()
+        joinRoomRoute()
+    }
 }
 
 
