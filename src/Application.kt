@@ -1,5 +1,6 @@
 package com.joshportfolio
 
+import com.google.gson.Gson
 import com.joshportfolio.routes.createRoomRoute
 import com.joshportfolio.routes.getRoomsRoute
 import com.joshportfolio.routes.joinRoomRoute
@@ -21,6 +22,7 @@ import java.time.*
 fun main(args: Array<String>): Unit = io.ktor.server.netty.EngineMain.main(args)
 
 val server = DrawingServer()
+val gson = Gson()
 
 @Suppress("unused") // Referenced in application.conf
 @kotlin.jvm.JvmOverloads
@@ -37,12 +39,16 @@ fun Application.module(testing: Boolean = false) {
             call.sessions.set(DrawingSession(clientId, generateNonce()))
         }
     }
+
     install(ContentNegotiation) {
         gson {
         }
     }
+
     install(CallLogging)
+
     install(WebSockets)
+
     install(Routing){
         createRoomRoute()
         getRoomsRoute()
