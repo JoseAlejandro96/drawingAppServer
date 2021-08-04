@@ -2,6 +2,7 @@ package com.joshportfolio
 
 import com.google.gson.Gson
 import com.joshportfolio.routes.createRoomRoute
+import com.joshportfolio.routes.gameWebSocketRoute
 import com.joshportfolio.routes.getRoomsRoute
 import com.joshportfolio.routes.joinRoomRoute
 import com.joshportfolio.session.DrawingSession
@@ -53,6 +54,7 @@ fun Application.module(testing: Boolean = false) {
         createRoomRoute()
         getRoomsRoute()
         joinRoomRoute()
+        gameWebSocketRoute()
     }
 }
 

@@ -1,13 +1,15 @@
 package com.joshportfolio.routes
 
 import com.google.gson.JsonParser
+import com.joshportfolio.data.Player
 import com.joshportfolio.data.Room
-import com.joshportfolio.data.models.BaseModel
-import com.joshportfolio.data.models.ChatMessage
-import com.joshportfolio.data.models.DrawData
+import com.joshportfolio.data.models.*
 import com.joshportfolio.gson
+import com.joshportfolio.other.Constants.TYPE_ANNOUNCEMENT
 import com.joshportfolio.other.Constants.TYPE_CHAT_MESSAGE
 import com.joshportfolio.other.Constants.TYPE_DRAW_DATA
+import com.joshportfolio.other.Constants.TYPE_JOIN_ROOM_HANDSHAKE
+import com.joshportfolio.other.Constants.TYPE_PHASE_CHANGE
 import com.joshportfolio.server
 import com.joshportfolio.session.DrawingSession
 import io.ktor.http.cio.websocket.*
@@ -27,6 +29,23 @@ fun Route.gameWebSocketRoute(){
     route("/ws/draw"){
         standardWebSocket { socket, clientId, message, payload ->
             when(payload){
+                is JoinRoomHandshake -> {
+                    val room = server.rooms[payload.roomName]
+                    if(room == null){
+                        val gameError = GameError(GameError.ERROR_ROOM_NOT_FOUND)
+                        socket.send(Frame.Text(gson.toJson(gameError)))
+                        return@standardWebSocket
+                    }
+                    val player = Player(
+                        payload.username,
+                        socket,
+                        payload.clientId
+                    )
+                    server.playerJoined(player)
+                    if(!room.containsPlayer(player.userName)){
+                        room.addPlayer(player.clientId, player.userName, socket)
+                    }
+                }
                 is DrawData ->{
                     val room = server.rooms[payload.roomName] ?: return@standardWebSocket
                     if(room.phase == Room.Phase.GAME_RUNNING){
@@ -63,6 +82,9 @@ fun Route.standardWebSocket(
                     val type = when(jsonObject.get("type").asString){
                         TYPE_CHAT_MESSAGE -> ChatMessage::class.java
                         TYPE_DRAW_DATA -> DrawData::class.java
+                        TYPE_ANNOUNCEMENT -> Announcement::class.java
+                        TYPE_JOIN_ROOM_HANDSHAKE -> JoinRoomHandshake::class.java
+                        TYPE_PHASE_CHANGE -> PhaseChange::class.java
                         else -> BaseModel::class.java
                     }
                     val payload = gson.fromJson(message, type)
